@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mission Gully - Die verschwundene Flasche</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="data/story.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div class="brand">
+          <p class="eyebrow">Entscheidungsspiel</p>
+          <h1>Mission Gully</h1>
+          <p>Die verschwundene Flasche</p>
+        </div>
+
+        <nav class="top-actions" aria-label="Navigation">
+          <button class="nav-button" id="homeButton" type="button">🏠 Zurück zum Anfang</button>
+          <button class="nav-button" id="backButton" type="button">⬅ Zurück</button>
+        </nav>
+      </header>
+
+      <main class="scene-card" id="sceneCard" aria-live="polite">
+        <section class="image-area" aria-labelledby="sceneTitle">
+          <h2 id="sceneTitle"></h2>
+
+          <div class="image-frame">
+            <img id="sceneImage" alt="">
+            <div class="image-placeholder" id="imagePlaceholder" hidden>
+              <strong>Hier kommt das Szenenbild hin</strong>
+              <span id="imagePath"></span>
+            </div>
+          </div>
+        </section>
+
+        <section class="story-text" aria-label="Text zur Szene">
+          <p id="sceneText"></p>
+        </section>
+
+        <div class="audio-row">
+          <button class="audio-button" id="audioButton" type="button">🔊 Text anhören</button>
+          <p class="audio-note" id="audioNote" hidden></p>
+        </div>
+
+        <section class="choices-area" aria-labelledby="choicesTitle">
+          <h2 id="choicesTitle">Was entscheidet ihr?</h2>
+          <div class="choices" id="choices"></div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
