@@ -1,7 +1,7 @@
-Mission Gully – extrahierte Hauptbilder aus Geschichte(1).pptx
-Ordner images_png: Originalbilder aus der PowerPoint, passend benannt.
-Ordner images_jpg: weboptimierte JPG-Versionen für GitHub Pages.
-bilder_manifest.csv: Zuordnung Foliennummer → Dateiname.
+Mission Gully - extrahierte Hauptbilder aus der PowerPoint
 
-Empfehlung für die App: Nutze images_jpg, weil die Dateien kleiner sind.
-Audio-Dateien später passend benennen, z. B. 01-start.mp3, 02-flasche-aufheben.mp3 usw.
+Die App nutzt die JPG-Dateien direkt aus diesem Ordner.
+Die Dateinamen entsprechen den Szenen-IDs in data/story.js.
+Es werden keine Audio-Dateien gebraucht, weil die App den Browser-Vorleser nutzt.
+
+bilder_manifest.csv: Zuordnung Foliennummer zu Dateiname.

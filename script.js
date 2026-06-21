@@ -1,39 +1,194 @@
 (function () {
   "use strict";
 
-  const scenes = new Map(window.storyData.map((scene) => [scene.id, scene]));
   const startId = "01-start";
+  const scenes = new Map(window.storyData.map((scene) => [scene.id, scene]));
   const historyStack = [];
-  const audioPlayer = new Audio();
+  const canSpeak = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
 
   let currentScene = scenes.get(startId);
-  let sceneVersion = 0;
+  let availableVoices = [];
 
   const sceneCard = document.getElementById("sceneCard");
+  const sceneNumber = document.getElementById("sceneNumber");
   const sceneTitle = document.getElementById("sceneTitle");
+  const endingBadge = document.getElementById("endingBadge");
   const sceneText = document.getElementById("sceneText");
+  const infoBox = document.getElementById("infoBox");
+  const infoText = document.getElementById("infoText");
   const sceneImage = document.getElementById("sceneImage");
   const imagePlaceholder = document.getElementById("imagePlaceholder");
   const imagePath = document.getElementById("imagePath");
-  const audioButton = document.getElementById("audioButton");
-  const audioNote = document.getElementById("audioNote");
+  const readButton = document.getElementById("readButton");
+  const infoReadButton = document.getElementById("infoReadButton");
+  const stopButton = document.getElementById("stopButton");
+  const readerMessage = document.getElementById("readerMessage");
   const choicesContainer = document.getElementById("choices");
   const homeButton = document.getElementById("homeButton");
   const backButton = document.getElementById("backButton");
 
-  function stopAudio() {
-    audioPlayer.pause();
-    audioPlayer.removeAttribute("src");
-    audioPlayer.load();
-    audioButton.classList.remove("is-playing");
-    audioButton.textContent = "🔊 Text anhören";
+  const preferredVoiceNames = [
+    "anna",
+    "markus",
+    "katja",
+    "petra",
+    "yannick",
+    "conrad",
+    "stefan",
+    "deutsch"
+  ];
+
+  const clearVoiceHints = [
+    "premium",
+    "enhanced",
+    "neural",
+    "natural",
+    "online",
+    "google",
+    "microsoft"
+  ];
+
+  const roboticVoiceHints = [
+    "compact",
+    "eloquence",
+    "siri",
+    "shelley",
+    "grandma",
+    "grandpa",
+    "eddy",
+    "flo",
+    "reed",
+    "rocko",
+    "sandy",
+    "shelley"
+  ];
+
+  function loadVoices() {
+    if (!canSpeak) {
+      availableVoices = [];
+      return;
+    }
+
+    availableVoices = window.speechSynthesis.getVoices();
+  }
+
+  function getBestGermanVoice() {
+    if (!canSpeak) {
+      return null;
+    }
+
+    loadVoices();
+
+    const germanVoices = availableVoices.filter((voice) => voice.lang && voice.lang.toLowerCase().startsWith("de"));
+
+    if (germanVoices.length === 0) {
+      return null;
+    }
+
+    return germanVoices
+      .map((voice) => ({ voice, score: getGermanVoiceScore(voice) }))
+      .sort((a, b) => b.score - a.score)[0].voice;
+  }
+
+  function getGermanVoiceScore(voice) {
+    const name = (voice.name || "").toLowerCase();
+    const language = (voice.lang || "").toLowerCase();
+    let score = 0;
+
+    if (language === "de-de") {
+      score += 40;
+    } else if (language.startsWith("de")) {
+      score += 24;
+    }
+
+    if (voice.localService) {
+      score += 18;
+    }
+
+    preferredVoiceNames.forEach((hint, index) => {
+      if (name.includes(hint)) {
+        score += 40 - index * 3;
+      }
+    });
+
+    clearVoiceHints.forEach((hint) => {
+      if (name.includes(hint)) {
+        score += 10;
+      }
+    });
+
+    roboticVoiceHints.forEach((hint) => {
+      if (name.includes(hint)) {
+        score -= 35;
+      }
+    });
+
+    return score;
+  }
+
+  function stopReading() {
+    if (canSpeak) {
+      window.speechSynthesis.cancel();
+    }
+
+    readButton.classList.remove("is-reading");
+    infoReadButton.classList.remove("is-reading");
+    readButton.textContent = "🔊 Text vorlesen";
+    infoReadButton.textContent = "💡 Info vorlesen";
+    stopButton.disabled = true;
+  }
+
+  function startReading(kind) {
+    if (!canSpeak) {
+      showReaderMessage("Auf diesem Gerät ist die Vorlesefunktion leider nicht verfügbar.");
+      readButton.disabled = true;
+      infoReadButton.disabled = true;
+      stopButton.disabled = true;
+      return;
+    }
+
+    const textToRead = kind === "info" ? currentScene.infoText : currentScene.text;
+    const button = kind === "info" ? infoReadButton : readButton;
+
+    if (!textToRead) {
+      return;
+    }
+
+    stopReading();
+    hideReaderMessage();
+
+    const utterance = new SpeechSynthesisUtterance(textToRead);
+    const voice = getBestGermanVoice();
+
+    utterance.lang = "de-DE";
+    utterance.rate = 0.88;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    if (voice) {
+      utterance.voice = voice;
+    }
+
+    utterance.onstart = function () {
+      button.classList.add("is-reading");
+      button.textContent = kind === "info" ? "💡 Info läuft" : "🔊 Text läuft";
+      stopButton.disabled = false;
+    };
+
+    utterance.onend = stopReading;
+    utterance.onerror = function () {
+      stopReading();
+      showReaderMessage("Das Vorlesen wurde gestoppt.");
+    };
+
+    window.speechSynthesis.speak(utterance);
   }
 
   function showScene(sceneId, rememberPrevious) {
     const nextScene = scenes.get(sceneId);
 
     if (!nextScene) {
-      showAudioNote(`Diese Szene ist noch nicht angelegt: ${sceneId}`);
+      console.warn(`Szene nicht gefunden: ${sceneId}`);
       return;
     }
 
@@ -42,22 +197,26 @@
     }
 
     currentScene = nextScene;
-    sceneVersion += 1;
-    stopAudio();
-    renderScene(sceneVersion);
+    stopReading();
+    renderScene();
   }
 
-  function renderScene(version) {
+  function renderScene() {
     sceneCard.classList.remove("is-changing");
     void sceneCard.offsetWidth;
     sceneCard.classList.add("is-changing");
+    sceneCard.dataset.tone = getSceneTone(currentScene);
+    sceneCard.dataset.ending = currentScene.ending || "";
 
+    sceneNumber.textContent = currentScene.id.slice(0, 2);
     sceneTitle.textContent = currentScene.title;
     sceneText.textContent = currentScene.text || "";
+    renderEndingBadge();
+    renderInfo();
     backButton.disabled = historyStack.length === 0;
 
     renderImage();
-    renderAudio(version);
+    renderReaderControls();
     renderChoices();
   }
 
@@ -80,38 +239,48 @@
     sceneImage.src = currentScene.image;
   }
 
-  async function renderAudio(version) {
-    audioButton.disabled = true;
-    audioButton.hidden = false;
-    audioButton.textContent = "🔊 Text anhören";
-    hideAudioNote();
+  function renderReaderControls() {
+    readButton.disabled = !canSpeak;
+    infoReadButton.hidden = !currentScene.infoText;
+    infoReadButton.disabled = !canSpeak || !currentScene.infoText;
+    stopButton.disabled = true;
 
-    if (!currentScene.audio) {
-      audioButton.hidden = true;
-      return;
-    }
-
-    const available = await audioExists(currentScene.audio);
-
-    if (version !== sceneVersion) {
-      return;
-    }
-
-    audioButton.disabled = !available;
-
-    if (!available) {
-      audioButton.textContent = "🔇 Audio fehlt";
-      showAudioNote("Die Audiodatei wird später ergänzt.");
+    if (!canSpeak) {
+      showReaderMessage("Auf diesem Gerät ist die Vorlesefunktion leider nicht verfügbar.");
+    } else {
+      hideReaderMessage();
     }
   }
 
-  async function audioExists(path) {
-    try {
-      const response = await fetch(path, { method: "HEAD", cache: "no-store" });
-      return response.ok;
-    } catch (error) {
-      return false;
+  function renderInfo() {
+    if (currentScene.infoText) {
+      infoBox.hidden = false;
+      infoText.textContent = currentScene.infoText;
+    } else {
+      infoBox.hidden = true;
+      infoText.textContent = "";
     }
+  }
+
+  function renderEndingBadge() {
+    const ending = currentScene.ending;
+
+    if (!ending) {
+      endingBadge.hidden = true;
+      endingBadge.textContent = "";
+      endingBadge.dataset.ending = "";
+      return;
+    }
+
+    const labels = {
+      good: "✓ Gutes Ende",
+      warning: "! Nachdenkliches Ende",
+      neutral: "Mission beendet"
+    };
+
+    endingBadge.hidden = false;
+    endingBadge.dataset.ending = ending;
+    endingBadge.textContent = labels[ending] || labels.neutral;
   }
 
   function renderChoices() {
@@ -125,10 +294,6 @@
 
       if (choice.target === startId) {
         button.classList.add("is-home");
-      }
-
-      if (choice.label.toLowerCase().includes("sturm") || choice.label.toLowerCase().includes("liegen lassen")) {
-        button.classList.add("is-warning");
       }
 
       button.addEventListener("click", () => {
@@ -145,40 +310,33 @@
     });
   }
 
-  function showAudioNote(message) {
-    audioNote.hidden = false;
-    audioNote.textContent = message;
-  }
+  function getSceneTone(scene) {
+    const id = scene.id;
 
-  function hideAudioNote() {
-    audioNote.hidden = true;
-    audioNote.textContent = "";
-  }
-
-  audioButton.addEventListener("click", async () => {
-    if (!currentScene.audio || audioButton.disabled) {
-      return;
+    if (id.includes("mikroplastik") || id.includes("muellteppich") || id.includes("negativ") || id.includes("sturm") || id.includes("flut")) {
+      return "warning";
     }
 
-    stopAudio();
-    hideAudioNote();
-    audioPlayer.src = currentScene.audio;
-
-    try {
-      await audioPlayer.play();
-      audioButton.classList.add("is-playing");
-      audioButton.textContent = "⏸ Ton läuft";
-    } catch (error) {
-      audioButton.disabled = true;
-      audioButton.textContent = "🔇 Audio fehlt";
-      showAudioNote("Diese Audiodatei kann noch nicht abgespielt werden.");
+    if (id.includes("ende") || id.includes("gut") || id.includes("aufheben") || id.includes("gefunden") || id.includes("positiv")) {
+      return "good";
     }
-  });
 
-  audioPlayer.addEventListener("ended", () => {
-    audioButton.classList.remove("is-playing");
-    audioButton.textContent = "🔊 Text anhören";
-  });
+    return "adventure";
+  }
+
+  function showReaderMessage(message) {
+    readerMessage.hidden = false;
+    readerMessage.textContent = message;
+  }
+
+  function hideReaderMessage() {
+    readerMessage.hidden = true;
+    readerMessage.textContent = "";
+  }
+
+  readButton.addEventListener("click", () => startReading("text"));
+  infoReadButton.addEventListener("click", () => startReading("info"));
+  stopButton.addEventListener("click", stopReading);
 
   homeButton.addEventListener("click", () => {
     historyStack.length = 0;
@@ -193,10 +351,18 @@
     }
   });
 
+  if (canSpeak) {
+    loadVoices();
+
+    if ("onvoiceschanged" in window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }
+
   if (!currentScene) {
     document.body.textContent = "Die Startszene wurde nicht gefunden.";
     return;
   }
 
-  renderScene(sceneVersion);
+  renderScene();
 })();

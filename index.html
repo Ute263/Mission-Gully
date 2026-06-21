@@ -12,42 +12,56 @@
     <div class="app-shell">
       <header class="app-header">
         <div class="brand">
-          <p class="eyebrow">Entscheidungsspiel</p>
+          <p class="eyebrow">Umwelt-Mission</p>
           <h1>Mission Gully</h1>
           <p>Die verschwundene Flasche</p>
         </div>
 
         <nav class="top-actions" aria-label="Navigation">
-          <button class="nav-button" id="homeButton" type="button">🏠 Zurück zum Anfang</button>
           <button class="nav-button" id="backButton" type="button">⬅ Zurück</button>
+          <button class="nav-button" id="homeButton" type="button">🏠 Anfang</button>
         </nav>
       </header>
 
       <main class="scene-card" id="sceneCard" aria-live="polite">
         <section class="image-area" aria-labelledby="sceneTitle">
-          <h2 id="sceneTitle"></h2>
+          <div class="scene-heading">
+            <p class="scene-number" id="sceneNumber"></p>
+            <h2 id="sceneTitle"></h2>
+          </div>
 
           <div class="image-frame">
             <img id="sceneImage" alt="">
             <div class="image-placeholder" id="imagePlaceholder" hidden>
-              <strong>Hier kommt das Szenenbild hin</strong>
+              <strong>Bild wird vorbereitet</strong>
               <span id="imagePath"></span>
             </div>
           </div>
         </section>
 
-        <section class="story-text" aria-label="Text zur Szene">
-          <p id="sceneText"></p>
-        </section>
+        <section class="scene-panel" aria-label="Text und Entscheidungen">
+          <p class="ending-badge" id="endingBadge" hidden></p>
 
-        <div class="audio-row">
-          <button class="audio-button" id="audioButton" type="button">🔊 Text anhören</button>
-          <p class="audio-note" id="audioNote" hidden></p>
-        </div>
+          <section class="story-text" aria-label="Haupttext">
+            <p id="sceneText"></p>
+          </section>
 
-        <section class="choices-area" aria-labelledby="choicesTitle">
-          <h2 id="choicesTitle">Was entscheidet ihr?</h2>
-          <div class="choices" id="choices"></div>
+          <section class="info-box" id="infoBox" aria-label="Infobox" hidden>
+            <h3>Wusstest du?</h3>
+            <p id="infoText"></p>
+          </section>
+
+          <section class="reader-panel" aria-label="Vorlesen">
+            <button class="reader-button" id="readButton" type="button">🔊 Text vorlesen</button>
+            <button class="info-reader-button" id="infoReadButton" type="button">💡 Info vorlesen</button>
+            <button class="stop-button" id="stopButton" type="button">⏹ Stoppen</button>
+            <p class="reader-message" id="readerMessage" hidden></p>
+          </section>
+
+          <section class="choices-area" aria-labelledby="choicesTitle">
+            <h2 id="choicesTitle">Was entscheidet ihr?</h2>
+            <div class="choices" id="choices"></div>
+          </section>
         </section>
       </main>
     </div>
