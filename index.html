@@ -9,7 +9,14 @@
     <script src="script.js" defer></script>
   </head>
   <body>
-    <div class="app-shell">
+    <section class="intro-screen" id="introScreen" aria-label="Einstieg">
+      <img class="intro-image" src="images/einstieg-mission-gully.jpg" alt="Mission Gully: Wie gelangt Plastik ins Meer?">
+      <div class="intro-actions">
+        <button class="start-button" id="startGameButton" type="button">Mission starten</button>
+      </div>
+    </section>
+
+    <div class="app-shell" id="appShell" hidden>
       <header class="app-header">
         <div class="brand">
           <p class="eyebrow">Umwelt-Mission</p>
@@ -23,7 +30,7 @@
         </nav>
       </header>
 
-      <main class="scene-card" id="sceneCard" aria-live="polite">
+      <main class="scene-card" id="sceneCard" aria-live="polite" tabindex="-1">
         <section class="image-area" aria-labelledby="sceneTitle">
           <div class="scene-heading">
             <p class="scene-number" id="sceneNumber"></p>

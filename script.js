@@ -9,6 +9,9 @@
   let currentScene = scenes.get(startId);
   let availableVoices = [];
 
+  const introScreen = document.getElementById("introScreen");
+  const appShell = document.getElementById("appShell");
+  const startGameButton = document.getElementById("startGameButton");
   const sceneCard = document.getElementById("sceneCard");
   const sceneNumber = document.getElementById("sceneNumber");
   const sceneTitle = document.getElementById("sceneTitle");
@@ -201,6 +204,15 @@
     renderScene();
   }
 
+  function startGame() {
+    stopReading();
+    historyStack.length = 0;
+    introScreen.hidden = true;
+    appShell.hidden = false;
+    showScene(startId, false);
+    sceneCard.focus({ preventScroll: true });
+  }
+
   function renderScene() {
     sceneCard.classList.remove("is-changing");
     void sceneCard.offsetWidth;
@@ -337,6 +349,7 @@
   readButton.addEventListener("click", () => startReading("text"));
   infoReadButton.addEventListener("click", () => startReading("info"));
   stopButton.addEventListener("click", stopReading);
+  startGameButton.addEventListener("click", startGame);
 
   homeButton.addEventListener("click", () => {
     historyStack.length = 0;
