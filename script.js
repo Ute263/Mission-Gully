@@ -24,6 +24,7 @@
   const imagePath = document.getElementById("imagePath");
   const readButton = document.getElementById("readButton");
   const infoReadButton = document.getElementById("infoReadButton");
+  const questionsReadButton = document.getElementById("questionsReadButton");
   const stopButton = document.getElementById("stopButton");
   const readerMessage = document.getElementById("readerMessage");
   const choicesContainer = document.getElementById("choices");
@@ -136,8 +137,10 @@
 
     readButton.classList.remove("is-reading");
     infoReadButton.classList.remove("is-reading");
+    questionsReadButton.classList.remove("is-reading");
     readButton.textContent = "🔊 Text vorlesen";
     infoReadButton.textContent = "💡 Info vorlesen";
+    questionsReadButton.textContent = "❓ Fragen vorlesen";
     stopButton.disabled = true;
   }
 
@@ -146,12 +149,13 @@
       showReaderMessage("Auf diesem Gerät ist die Vorlesefunktion leider nicht verfügbar.");
       readButton.disabled = true;
       infoReadButton.disabled = true;
+      questionsReadButton.disabled = true;
       stopButton.disabled = true;
       return;
     }
 
-    const textToRead = kind === "info" ? currentScene.infoText : currentScene.text;
-    const button = kind === "info" ? infoReadButton : readButton;
+    const textToRead = getReadText(kind);
+    const button = getReaderButton(kind);
 
     if (!textToRead) {
       return;
@@ -174,7 +178,7 @@
 
     utterance.onstart = function () {
       button.classList.add("is-reading");
-      button.textContent = kind === "info" ? "💡 Info läuft" : "🔊 Text läuft";
+      button.textContent = getReadingLabel(kind);
       stopButton.disabled = false;
     };
 
@@ -185,6 +189,52 @@
     };
 
     window.speechSynthesis.speak(utterance);
+  }
+
+  function getReadText(kind) {
+    if (kind === "info") {
+      return currentScene.infoText || "";
+    }
+
+    if (kind === "questions") {
+      return getChoicesReadText();
+    }
+
+    return currentScene.text || "";
+  }
+
+  function getReaderButton(kind) {
+    if (kind === "info") {
+      return infoReadButton;
+    }
+
+    if (kind === "questions") {
+      return questionsReadButton;
+    }
+
+    return readButton;
+  }
+
+  function getReadingLabel(kind) {
+    if (kind === "info") {
+      return "💡 Info läuft";
+    }
+
+    if (kind === "questions") {
+      return "❓ Fragen laufen";
+    }
+
+    return "🔊 Text läuft";
+  }
+
+  function getChoicesReadText() {
+    if (!currentScene.choices || currentScene.choices.length === 0) {
+      return "";
+    }
+
+    const intro = currentScene.choices.length === 1 ? "Diese Möglichkeit gibt es:" : "Was entscheidet ihr?";
+    const choicesText = currentScene.choices.map((choice) => choice.label).join(". ");
+    return `${intro} ${choicesText}.`;
   }
 
   function showScene(sceneId, rememberPrevious) {
@@ -255,6 +305,8 @@
     readButton.disabled = !canSpeak;
     infoReadButton.hidden = !currentScene.infoText;
     infoReadButton.disabled = !canSpeak || !currentScene.infoText;
+    questionsReadButton.hidden = !currentScene.choices || currentScene.choices.length === 0;
+    questionsReadButton.disabled = !canSpeak || !currentScene.choices || currentScene.choices.length === 0;
     stopButton.disabled = true;
 
     if (!canSpeak) {
@@ -348,6 +400,7 @@
 
   readButton.addEventListener("click", () => startReading("text"));
   infoReadButton.addEventListener("click", () => startReading("info"));
+  questionsReadButton.addEventListener("click", () => startReading("questions"));
   stopButton.addEventListener("click", stopReading);
   startGameButton.addEventListener("click", startGame);
 

@@ -50,23 +50,25 @@
           <p class="ending-badge" id="endingBadge" hidden></p>
 
           <section class="story-text" aria-label="Haupttext">
+            <span class="section-icon section-icon-text" aria-hidden="true">🔊</span>
             <p id="sceneText"></p>
           </section>
 
           <section class="info-box" id="infoBox" aria-label="Infobox" hidden>
-            <h3>Wusstest du?</h3>
+            <h3><span class="section-icon section-icon-info" aria-hidden="true">💡</span>Wusstest du?</h3>
             <p id="infoText"></p>
           </section>
 
           <section class="reader-panel" aria-label="Vorlesen">
             <button class="reader-button" id="readButton" type="button">🔊 Text vorlesen</button>
             <button class="info-reader-button" id="infoReadButton" type="button">💡 Info vorlesen</button>
+            <button class="questions-reader-button" id="questionsReadButton" type="button">❓ Fragen vorlesen</button>
             <button class="stop-button" id="stopButton" type="button">⏹ Stoppen</button>
             <p class="reader-message" id="readerMessage" hidden></p>
           </section>
 
           <section class="choices-area" aria-labelledby="choicesTitle">
-            <h2 id="choicesTitle">Was entscheidet ihr?</h2>
+            <h2 id="choicesTitle"><span class="section-icon section-icon-questions" aria-hidden="true">❓</span>Was entscheidet ihr?</h2>
             <div class="choices" id="choices"></div>
           </section>
         </section>
